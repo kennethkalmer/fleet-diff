@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 
-	"github.com/coreos/fleet/log"
 	"github.com/coreos/fleet/unit"
 )
 
@@ -74,9 +72,6 @@ func getUnitFromFile(file string) (*unit.UnitFile, error) {
 	if err != nil {
 		panic(err)
 	}
-
-	unitName := path.Base(file)
-	log.Debugf("Unit(%s) found in local filesystem", unitName)
 
 	return unit.NewUnitFile(string(out))
 }
