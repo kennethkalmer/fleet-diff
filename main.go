@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	sunit "github.com/coreos/fleet/Godeps/_workspace/src/github.com/coreos/go-systemd/unit"
 	"github.com/coreos/fleet/unit"
 )
 
@@ -43,16 +44,39 @@ func main() {
 		panic(err)
 	}
 
-	sourceHash := source.Hash()
-	destHash := dest.Hash()
+	sourceOptions := source.Options
+	destOptions := dest.Options
 
-	if sourceHash != destHash {
-		fmt.Println("Units are different!")
+	length := len(sourceOptions)
+	if length != len(destOptions) {
+		fmt.Println("Different number of options in each unit")
 		os.Exit(1)
-	} else {
-		fmt.Println("Everything looks fine.")
-		os.Exit(0)
 	}
+
+	valid := true
+	var o *sunit.UnitOption
+
+	for i := 0; i < length; i++ {
+		if !sourceOptions[i].Match(destOptions[i]) {
+			valid = false
+
+			fmt.Printf("Found difference at option %d:\n", i+1)
+
+			o = sourceOptions[i]
+			fmt.Printf("<  [%s]\n", o.Section)
+			fmt.Printf("<  %s=%s\n", o.Name, o.Value)
+
+			o = destOptions[i]
+			fmt.Printf(">  [%s]\n", o.Section)
+			fmt.Printf(">  %s=%s\n", o.Name, o.Value)
+		}
+	}
+
+	if !valid {
+		os.Exit(1)
+	}
+
+	fmt.Println("Everything looks fine.")
 }
 
 // getUnitFromStdin attempts to load a Unit from stdin
